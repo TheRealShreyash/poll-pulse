@@ -1,10 +1,12 @@
 import http from "node:http";
 import "dotenv/config";
 import { createApplication } from "./app";
+import { setupSocketServer } from "./socket";
 
 async function main() {
   try {
     const server = http.createServer(createApplication());
+    const io = setupSocketServer(server);
 
     const PORT = process.env.PORT || 8080;
 
