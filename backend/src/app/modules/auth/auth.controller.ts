@@ -12,6 +12,16 @@ export class AuthController {
     }
   }
 
+  static async handleIrisSignup(_: Request, res: Response) {
+    try {
+      res.redirect(
+        `${IRIS_AUTH_URL}/auth/authenticate/signup?clientId=${CLIENT_ID}`,
+      );
+    } catch (error) {
+      ApiResponse.error(res, error);
+    }
+  }
+
   static async handleCallback(req: Request, res: Response) {
     try {
       const code = req.query.code as string;

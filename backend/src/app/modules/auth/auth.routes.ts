@@ -4,6 +4,7 @@ import { AuthController } from "./auth.controller";
 const authRouter = Router();
 
 authRouter.get("/iris-login", AuthController.handleIrisLogin);
+authRouter.get("/iris-signup", AuthController.handleIrisSignup);
 authRouter.get("/callback", AuthController.handleCallback);
 authRouter.get('/refresh-token', AuthController.handleRefreshToken)
 
