@@ -1,10 +1,21 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { TopBar } from '../components/ui/TopBar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import type { Poll, PollStatus } from '#/lib/types'
+import { authenticate } from '#/services/auth'
 
 export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    const isAuthenticated = await authenticate()
+    if (!isAuthenticated) {
+      throw redirect({
+        to: '/login',
+        replace: true,
+        search: {},
+      })
+    }
+  },
   component: Dashboard,
 })
 
