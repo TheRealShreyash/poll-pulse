@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   --color-bg-0: #0e0e0e;
@@ -15,7 +15,7 @@
   --color-green-dim: rgba(74, 222, 128, 0.12);
   --color-green-dimhover: rgba(74, 222, 128, 0.18);
 
-  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-sans: "Geist", system-ui, sans-serif;
 
   --animate-blink: blink 1.4s ease-in-out infinite;
   --animate-fade-in: fadeIn 0.2s ease-out;

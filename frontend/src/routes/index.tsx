@@ -1,30 +1,30 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { TopBar } from '../components/ui/TopBar'
-import { Badge } from '../components/ui/Badge'
-import { Button } from '../components/ui/Button'
-import type { Poll, PollStatus } from '#/lib/types'
-import { authenticate } from '#/services/auth'
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { TopBar } from "../components/ui/TopBar";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import type { Poll, PollStatus } from "#/lib/types";
+import { authenticate } from "#/services/auth";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   beforeLoad: async () => {
-    const isAuthenticated = await authenticate()
+    const isAuthenticated = await authenticate();
     if (!isAuthenticated) {
       throw redirect({
-        to: '/login',
+        to: "/login",
         replace: true,
         search: {},
-      })
+      });
     }
   },
   component: Dashboard,
-})
+});
 
 // ── mock data (replace with useQuery → GET /polls) ────────────────────────────
 const MOCK_POLLS: Poll[] = [
   {
-    id: 'p1',
-    title: 'Which frontend framework should we adopt?',
-    status: 'active',
+    id: "p1",
+    title: "Which frontend framework should we adopt?",
+    status: "active",
     isAnonymous: false,
     showLiveResults: true,
     requiresAuth: true,
@@ -34,9 +34,9 @@ const MOCK_POLLS: Poll[] = [
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'p2',
-    title: 'Team lunch preference for next Friday',
-    status: 'published',
+    id: "p2",
+    title: "Team lunch preference for next Friday",
+    status: "published",
     isAnonymous: true,
     showLiveResults: true,
     requiresAuth: false,
@@ -46,9 +46,9 @@ const MOCK_POLLS: Poll[] = [
     createdAt: new Date(Date.now() - 86_400_000).toISOString(),
   },
   {
-    id: 'p3',
-    title: 'Q3 retrospective — what went well?',
-    status: 'closed',
+    id: "p3",
+    title: "Q3 retrospective — what went well?",
+    status: "closed",
     isAnonymous: false,
     showLiveResults: false,
     requiresAuth: true,
@@ -58,9 +58,9 @@ const MOCK_POLLS: Poll[] = [
     createdAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
   },
   {
-    id: 'p4',
-    title: 'Preferred meeting time for weekly sync',
-    status: 'draft',
+    id: "p4",
+    title: "Preferred meeting time for weekly sync",
+    status: "draft",
     isAnonymous: false,
     showLiveResults: true,
     requiresAuth: true,
@@ -69,26 +69,26 @@ const MOCK_POLLS: Poll[] = [
     expiresAt: null,
     createdAt: new Date(Date.now() - 7_200_000).toISOString(),
   },
-]
+];
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function timeLeft(iso: string): string {
-  const ms = new Date(iso).getTime() - Date.now()
-  if (ms <= 0) return 'expired'
-  const h = Math.floor(ms / 3_600_000)
-  const m = Math.floor((ms % 3_600_000) / 60_000)
-  return h > 0 ? `closes in ${h}h ${m}m` : `closes in ${m}m`
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return "expired";
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  return h > 0 ? `closes in ${h}h ${m}m` : `closes in ${m}m`;
 }
 
 function metaLine(p: Poll): string {
-  const parts: string[] = []
-  if (p.totalResponses > 0) parts.push(`${p.totalResponses} responses`)
-  if (p.status === 'active' && p.expiresAt) parts.push(timeLeft(p.expiresAt))
-  if (p.status === 'closed') parts.push('ended')
-  if (p.status === 'published') parts.push('results published')
-  if (p.status === 'draft') parts.push('not published yet')
-  return parts.join(' · ')
+  const parts: string[] = [];
+  if (p.totalResponses > 0) parts.push(`${p.totalResponses} responses`);
+  if (p.status === "active" && p.expiresAt) parts.push(timeLeft(p.expiresAt));
+  if (p.status === "closed") parts.push("ended");
+  if (p.status === "published") parts.push("results published");
+  if (p.status === "draft") parts.push("not published yet");
+  return parts.join(" · ");
 }
 
 // ── poll row ─────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ function PollRow({ poll }: { poll: Poll }) {
         <Badge variant={poll.status as PollStatus} />
 
         {/* Analytics icon — live or closed */}
-        {(poll.status === 'active' || poll.status === 'closed') && (
+        {(poll.status === "active" || poll.status === "closed") && (
           <Link
             to="/analytics/$pollId"
             params={{ pollId: poll.id }}
@@ -153,7 +153,7 @@ function PollRow({ poll }: { poll: Poll }) {
         )}
 
         {/* Share link */}
-        {poll.status !== 'draft' && (
+        {poll.status !== "draft" && (
           <Link
             to="/poll/$pollId"
             params={{ pollId: poll.id }}
@@ -179,15 +179,15 @@ function PollRow({ poll }: { poll: Poll }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ── page ──────────────────────────────────────────────────────────────────────
 
 function Dashboard() {
   // TODO: const { data: polls } = useQuery({ queryKey: ["polls"], queryFn: () => api.get("/polls") });
-  const polls = MOCK_POLLS
-  const liveCount = polls.filter((p) => p.status === 'active').length
+  const polls = MOCK_POLLS;
+  const liveCount = polls.filter((p) => p.status === "active").length;
 
   return (
     <>
@@ -222,7 +222,7 @@ function Dashboard() {
           <h1 className="text-[15px] font-medium text-ink-1">Your polls</h1>
           {liveCount > 0 && (
             <p className="text-[12px] text-ink-3 mt-1">
-              {liveCount} poll{liveCount > 1 ? 's' : ''} currently live
+              {liveCount} poll{liveCount > 1 ? "s" : ""} currently live
             </p>
           )}
         </div>
@@ -246,5 +246,5 @@ function Dashboard() {
         )}
       </main>
     </>
-  )
+  );
 }
