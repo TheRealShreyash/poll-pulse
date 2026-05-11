@@ -4,6 +4,15 @@ import { ApiResponse } from "../../common/utils";
 import { callback, refreshTokens } from "./auth.services";
 
 export class AuthController {
+  static async handleMe(req: Request, res: Response) {
+    try {
+      ApiResponse.ok(res, "Me");
+    } catch (error) {
+      console.log(error)
+      ApiResponse.error(res, error);
+    }
+  }
+
   static async handleIrisLogin(_: Request, res: Response) {
     try {
       res.redirect(`${IRIS_AUTH_URL}/auth/authenticate?clientId=${CLIENT_ID}`);
