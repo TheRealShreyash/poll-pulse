@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
+import { Route as SignupRouteImport } from "./routes/signup"
 import { Route as LoginRouteImport } from "./routes/login"
 import { Route as CreateRouteImport } from "./routes/create"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as PollPollIdRouteImport } from "./routes/poll/$pollId"
 import { Route as AnalyticsPollIdRouteImport } from "./routes/analytics/$pollId"
 
+const SignupRoute = SignupRouteImport.update({
+  id: "/signup",
+  path: "/signup",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: "/login",
   path: "/login",
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
   "/login": typeof LoginRoute
+  "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
   "/poll/$pollId": typeof PollPollIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
   "/login": typeof LoginRoute
+  "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
   "/poll/$pollId": typeof PollPollIdRoute
 }
@@ -60,19 +68,33 @@ export interface FileRoutesById {
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
   "/login": typeof LoginRoute
+  "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
   "/poll/$pollId": typeof PollPollIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/create" | "/login" | "/analytics/$pollId" | "/poll/$pollId"
+  fullPaths:
+    | "/"
+    | "/create"
+    | "/login"
+    | "/signup"
+    | "/analytics/$pollId"
+    | "/poll/$pollId"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/create" | "/login" | "/analytics/$pollId" | "/poll/$pollId"
+  to:
+    | "/"
+    | "/create"
+    | "/login"
+    | "/signup"
+    | "/analytics/$pollId"
+    | "/poll/$pollId"
   id:
     | "__root__"
     | "/"
     | "/create"
     | "/login"
+    | "/signup"
     | "/analytics/$pollId"
     | "/poll/$pollId"
   fileRoutesById: FileRoutesById
@@ -81,12 +103,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
   LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
   AnalyticsPollIdRoute: typeof AnalyticsPollIdRoute
   PollPollIdRoute: typeof PollPollIdRoute
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
+    "/signup": {
+      id: "/signup"
+      path: "/signup"
+      fullPath: "/signup"
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/login": {
       id: "/login"
       path: "/login"
@@ -129,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
   LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
   AnalyticsPollIdRoute: AnalyticsPollIdRoute,
   PollPollIdRoute: PollPollIdRoute,
 }

@@ -1,7 +1,7 @@
-import { authenticate, redirectToIrisLogin } from "#/services/auth";
+import { authenticate, redirectToIrisSignup } from "#/services/auth";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
     const isAuthenticated = await authenticate();
     if (isAuthenticated) {
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/login")({
       });
     }
   },
-  component: LoginPage,
+  component: SignupPage,
 });
 
 function IrisIcon() {
@@ -31,9 +31,9 @@ function IrisIcon() {
   );
 }
 
-function LoginPage() {
-  function handleLogin() {
-    redirectToIrisLogin();
+function SignupPage() {
+  function handleSignup() {
+    redirectToIrisSignup();
   }
 
   return (
@@ -122,25 +122,25 @@ function LoginPage() {
         <h1 className="text-[18px] font-medium text-ink-1 tracking-tight mb-1">
           Pulse
         </h1>
-        <p className="text-[11px] text-ink-3 mb-5">Sign in to your account</p>
+        <p className="text-[11px] text-ink-3 mb-5">Create your account</p>
 
         <div className="w-full h-px bg-white/6 mb-5" />
 
         <button
-          onClick={handleLogin}
+          onClick={handleSignup}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-[9px] border border-green-bar/35 bg-green-dim text-green-acc text-[13px] font-medium hover:bg-green-dimhover hover:border-green-bar/55 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-green-acc mb-5"
         >
           <IrisIcon />
-          Login with Iris
+          Sign up with Iris
         </button>
 
         <p className="text-[11px] text-ink-3">
-          No account?{" "}
+          Have an account?{" "}
           <Link
-            to="/signup"
+            to="/login"
             className="text-ink-2 underline underline-offset-2 hover:text-ink-1 transition-colors"
           >
-            Sign up
+            Log in
           </Link>
         </p>
       </div>

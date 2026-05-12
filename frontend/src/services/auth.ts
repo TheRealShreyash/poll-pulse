@@ -7,11 +7,26 @@ export const redirectToIrisSignup = () => {
 };
 
 export const authenticate = async () => {
-  const response = await fetch(`/api/auth/me`, {
-    credentials: "include",
-  });
+  try {
+    const response = await fetch(`/api/auth/me`, {
+      credentials: "include",
+    });
 
-  if (!response.ok) return false;
+    if (response.ok) return true;
 
-  return true;
+    if (response.status === 401) {
+      const refreshRes = await fetch(`/api/auth/refresh-token`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      return refreshRes.ok;
+    }
+    return false;
+  } catch (error) {
+    console.log(`[AUTH] error: ${error}`);
+    return false;
+  }
 };
+
+// export const getUserInfo

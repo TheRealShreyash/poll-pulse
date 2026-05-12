@@ -1,33 +1,43 @@
-// src/routes/create.tsx
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import { TopBar } from '../components/ui/TopBar'
-import { Button } from '../components/ui/Button'
-import { Toggle } from '../components/ui/Toggle'
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { TopBar } from "../components/ui/TopBar";
+import { Button } from "../components/ui/Button";
+import { Toggle } from "../components/ui/Toggle";
+import { authenticate } from "#/services/auth";
 
-export const Route = createFileRoute('/create')({
+export const Route = createFileRoute("/create")({
+  beforeLoad: async () => {
+    const isAuthenticated = await authenticate();
+    if (!isAuthenticated) {
+      throw redirect({
+        to: "/login",
+        replace: true,
+        search: {},
+      });
+    }
+  },
   component: CreatePoll,
-})
+});
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface FormState {
-  title: string
-  options: string[]
-  isAnonymous: boolean
-  showLiveResults: boolean
-  expiryHours: number
+  title: string;
+  options: string[];
+  isAnonymous: boolean;
+  showLiveResults: boolean;
+  expiryHours: number;
 }
 
 const EXPIRY_OPTIONS = [
-  { label: '1 hour', value: 1 },
-  { label: '2 hours', value: 2 },
-  { label: '6 hours', value: 6 },
-  { label: '1 day', value: 24 },
-  { label: '3 days', value: 72 },
-  { label: '1 week', value: 168 },
-  { label: 'No expiry', value: 0 },
-]
+  { label: "1 hour", value: 1 },
+  { label: "2 hours", value: 2 },
+  { label: "6 hours", value: 6 },
+  { label: "1 day", value: 24 },
+  { label: "3 days", value: 72 },
+  { label: "1 week", value: 168 },
+  { label: "No expiry", value: 0 },
+];
 
 // ── setting row wrapper ───────────────────────────────────────────────────────
 
@@ -37,10 +47,10 @@ function SettingRow({
   htmlFor,
   children,
 }: {
-  label: string
-  description?: string
-  htmlFor?: string
-  children: React.ReactNode
+  label: string;
+  description?: string;
+  htmlFor?: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-6 py-3.5 border-t border-white/[0.07]">
@@ -55,47 +65,50 @@ function SettingRow({
       </label>
       {children}
     </div>
-  )
+  );
 }
 
 // ── page ──────────────────────────────────────────────────────────────────────
 
 function CreatePoll() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const [form, setForm] = useState<FormState>({
-    title: '',
-    options: ['', ''],
+    title: "",
+    options: ["", ""],
     isAnonymous: false,
     showLiveResults: true,
     expiryHours: 24,
-  })
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filledOptions = form.options.filter((o) => o.trim().length > 0)
-  const isValid = form.title.trim().length > 0 && filledOptions.length >= 2
+  const filledOptions = form.options.filter((o) => o.trim().length > 0);
+  const isValid = form.title.trim().length > 0 && filledOptions.length >= 2;
 
   function setOption(i: number, value: string) {
     setForm((f) => {
-      const o = [...f.options]
-      o[i] = value
-      return { ...f, options: o }
-    })
+      const o = [...f.options];
+      o[i] = value;
+      return { ...f, options: o };
+    });
   }
   function addOption() {
-    if (form.options.length >= 10) return
-    setForm((f) => ({ ...f, options: [...f.options, ''] }))
+    if (form.options.length >= 10) return;
+    setForm((f) => ({ ...f, options: [...f.options, ""] }));
   }
   function removeOption(i: number) {
-    if (form.options.length <= 2) return
-    setForm((f) => ({ ...f, options: f.options.filter((_, idx) => idx !== i) }))
+    if (form.options.length <= 2) return;
+    setForm((f) => ({
+      ...f,
+      options: f.options.filter((_, idx) => idx !== i),
+    }));
   }
 
   async function submit(asDraft: boolean) {
-    if (!asDraft && !isValid) return
-    setSubmitting(true)
-    setError(null)
+    if (!asDraft && !isValid) return;
+    setSubmitting(true);
+    setError(null);
     try {
       // TODO: const { poll } = await api.post("/polls", {
       //   title:           form.title.trim(),
@@ -106,12 +119,12 @@ function CreatePoll() {
       //   status:          asDraft ? "draft" : "active",
       // });
       // navigate({ to: "/analytics/$pollId", params: { pollId: poll.id } });
-      await new Promise((r) => setTimeout(r, 500)) // remove when wired
-      navigate({ to: '/' })
+      await new Promise((r) => setTimeout(r, 500)); // remove when wired
+      navigate({ to: "/" });
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError("Something went wrong. Please try again.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -131,7 +144,7 @@ function CreatePoll() {
             placeholder="Ask something…"
             rows={2}
             maxLength={280}
-            className="w-full px-3 py-2.5 rounded-lg bg-bg-2 border border-white/[0.08] text-[14px] text-ink-1 placeholder-ink-3 resize-none focus:border-white/20 transition-colors"
+            className="w-full px-3 py-2.5 rounded-lg bg-bg-2 border border-white/8 text-[14px] text-ink-1 placeholder-ink-3 resize-none focus:border-white/20 transition-colors"
           />
           <p className="text-[10px] text-ink-3 mt-1 text-right">
             {form.title.length}/280
@@ -150,7 +163,7 @@ function CreatePoll() {
           <div className="flex flex-col gap-2">
             {form.options.map((opt, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="text-[11px] text-ink-3 w-4 text-right select-none flex-shrink-0">
+                <span className="text-[11px] text-ink-3 w-4 text-right select-none shrink-0">
                   {i + 1}
                 </span>
                 <input
@@ -159,13 +172,13 @@ function CreatePoll() {
                   onChange={(e) => setOption(i, e.target.value)}
                   placeholder={`Option ${i + 1}`}
                   maxLength={120}
-                  className="flex-1 px-3 py-2 rounded-lg bg-bg-2 border border-white/[0.07] text-[13px] placeholder-ink-3 focus:border-white/[0.18] transition-colors"
+                  className="flex-1 px-3 py-2 rounded-lg bg-bg-2 border border-white/[0.07] text-[13px] placeholder-ink-3 focus:border-white/18 transition-colors"
                 />
                 {form.options.length > 2 && (
                   <button
                     onClick={() => removeOption(i)}
                     aria-label={`Remove option ${i + 1}`}
-                    className="text-ink-3 hover:text-red-400 transition-colors flex-shrink-0"
+                    className="text-ink-3 hover:text-red-400 transition-colors shrink-0"
                   >
                     <svg
                       width="14"
@@ -250,7 +263,7 @@ function CreatePoll() {
               onChange={(e) =>
                 setForm((f) => ({ ...f, expiryHours: Number(e.target.value) }))
               }
-              className="px-2.5 py-1.5 rounded-lg bg-bg-2 border border-white/[0.08] text-[12px] focus:border-white/20 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-lg bg-bg-2 border border-white/8 text-[12px] focus:border-white/20 cursor-pointer"
             >
               {EXPIRY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -276,10 +289,10 @@ function CreatePoll() {
             onClick={() => submit(false)}
             disabled={submitting || !isValid}
           >
-            {submitting ? 'Creating…' : 'Activate poll'}
+            {submitting ? "Creating…" : "Activate poll"}
           </Button>
         </div>
       </main>
     </>
-  )
+  );
 }
