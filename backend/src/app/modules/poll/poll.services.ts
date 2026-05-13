@@ -1,5 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "../../../db";
-import { optionsTable, pollsTable } from "../../../db/schema";
+import { optionsTable, pollsTable, usersTable } from "../../../db/schema";
 import { ApiError } from "../../common/utils";
 import type { CreatePollPayload } from "./poll.models";
 
@@ -16,16 +17,25 @@ export const createPoll = async (
     status,
     showLiveResults,
   } = payload;
+
+  const [creator] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, creatorId))
+    .limit(1);
+
+  if (!creator) throw ApiError.badRequest("User does not exist!");
+
   const [poll] = await db
     .insert(pollsTable)
     .values({
       creatorId,
       title,
       description,
-      isAnonymous,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
       status,
+      isAnonymous,
       showLiveResults,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
     })
     .returning();
 
