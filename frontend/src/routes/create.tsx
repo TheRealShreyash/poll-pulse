@@ -4,6 +4,7 @@ import { TopBar } from "../components/ui/TopBar";
 import { Button } from "../components/ui/Button";
 import { Toggle } from "../components/ui/Toggle";
 import { authenticate } from "#/services/auth";
+import { createPoll } from "#/services/poll";
 
 export const Route = createFileRoute("/create")({
   beforeLoad: async () => {
@@ -110,17 +111,30 @@ function CreatePoll() {
     setSubmitting(true);
     setError(null);
     try {
-      // TODO: const { poll } = await api.post("/polls", {
-      //   title:           form.title.trim(),
-      //   options:         filledOptions,
-      //   isAnonymous:     form.isAnonymous,
-      //   showLiveResults: form.showLiveResults,
-      //   expiryHours:     form.expiryHours || null,
-      //   status:          asDraft ? "draft" : "active",
-      // });
-      // navigate({ to: "/analytics/$pollId", params: { pollId: poll.id } });
-      await new Promise((r) => setTimeout(r, 500)); // remove when wired
-      navigate({ to: "/" });
+      let expiryDate;
+      if (form.expiryHours > 0) {
+        const date = new Date();
+        date.setHours(date.getHours() + form.expiryHours);
+        expiryDate = date.toISOString();
+      }
+      const payload = {
+        title: form.title.trim(),
+        options: filledOptions,
+        description: "TEST",
+        isAnonymous: form.isAnonymous,
+        showLiveResults: form.showLiveResults,
+        expiresAt: expiryDate || null,
+        status: asDraft ? "DRAFT" : "LIVE",
+      };
+
+      console.log(payload);
+
+      const pollData = await createPoll(payload);
+      console.log(pollData);
+      navigate({
+        to: "/analytics/$pollId",
+        params: { pollId: pollData.id },
+      });
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

@@ -1,29 +1,35 @@
-export type PollStatus = 'draft' | 'active' | 'closed' | 'published'
+export type PollStatus = "DRAFT" | "LIVE" | "ENDED" | "PUBLISHED";
 
 export interface PollOption {
-  label: string
-  count: number
+  id: string;
+  text: string;
+  displayOrder: number;
+  count: number;
 }
 
 export interface Poll {
-  id: string
-  title: string
-  status: PollStatus
-  isAnonymous: boolean
-  showLiveResults: boolean
-  requiresAuth: boolean
-  options: PollOption[]
-  totalResponses: number
-  expiresAt: string | null // ISO
-  createdAt: string
+  id: string;
+  creatorId: string;
+  title: string;
+  description: string | null;
+  status: PollStatus;
+  isAnonymous: boolean;
+  showLiveResults: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface PollWithOptions extends Poll {
+  options: PollOption[];
+  totalResponses: number;
 }
 
 export interface VelocityPoint {
-  label: string // e.g. "2h ago"
-  count: number
+  label: string;
+  count: number;
 }
 
-export interface AnalyticsPoll extends Poll {
-  shareUrl: string
-  velocity: VelocityPoint[]
+export interface AnalyticsPoll extends PollWithOptions {
+  shareUrl: string;
+  velocity: VelocityPoint[];
 }
