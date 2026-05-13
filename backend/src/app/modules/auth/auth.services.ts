@@ -1,5 +1,7 @@
 import { ApiError } from "../../common/utils";
 import { CLIENT_ID, CLIENT_SECRET, IRIS_AUTH_URL } from "../../../config";
+import { db } from "../../../db";
+import { usersTable } from "../../../db/schema";
 
 export const callback = async (code: string) => {
   const response = await fetch(`${IRIS_AUTH_URL}/auth/token`, {
@@ -35,4 +37,21 @@ export const refreshTokens = async (refreshToken: string) => {
   };
 
   return data;
+};
+
+export const registerUser = async (payload: any) => {
+  const { sub, name, email } = payload;
+
+  console.log(payload)
+
+  const [user] = await db
+    .insert(usersTable)
+    .values({
+      id: sub,
+      username: name,
+      email,
+    })
+    .returning();
+
+  if (!user) throw ApiError.internalError("Internal server error");
 };

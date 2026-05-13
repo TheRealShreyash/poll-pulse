@@ -1,7 +1,13 @@
 import type { Request, Response } from "express";
-import { CLIENT_ID, FRONTEND_URL, IRIS_AUTH_URL, NODE_ENV } from "../../../config";
+import {
+  CLIENT_ID,
+  FRONTEND_URL,
+  IRIS_AUTH_URL,
+  NODE_ENV,
+} from "../../../config";
 import { ApiError, ApiResponse } from "../../common/utils";
-import { callback, refreshTokens } from "./auth.services";
+import { callback, refreshTokens, registerUser } from "./auth.services";
+import { verifyAccessToken } from "./utils/token";
 
 export class AuthController {
   static async handleMe(req: Request, res: Response) {
@@ -53,8 +59,13 @@ export class AuthController {
         maxAge: 15 * 60 * 1000,
       });
 
+      const userData = await verifyAccessToken(accessToken);
+
+      await registerUser(userData);
+
       res.redirect(FRONTEND_URL);
     } catch (error) {
+      // Instead of this response serve an error file
       ApiResponse.error(res, error);
     }
   }
