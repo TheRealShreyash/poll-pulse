@@ -7,7 +7,15 @@ export const createPoll = async (
   payload: CreatePollPayload,
   creatorId: string,
 ) => {
-  const { title, description, isAnonymous, expiresAt, options } = payload;
+  const {
+    title,
+    description,
+    isAnonymous,
+    expiresAt,
+    options,
+    status,
+    showLiveResults,
+  } = payload;
   const [poll] = await db
     .insert(pollsTable)
     .values({
@@ -16,6 +24,8 @@ export const createPoll = async (
       description,
       isAnonymous,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
+      status,
+      showLiveResults,
     })
     .returning();
 
