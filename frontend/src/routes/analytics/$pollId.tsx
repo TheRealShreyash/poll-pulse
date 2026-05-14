@@ -1,8 +1,4 @@
-// src/routes/analytics/$pollId.tsx
-// Creator-only analytics view. Protected by Iris auth (redirect handled in beforeLoad).
-// Live counts update via Socket.IO while poll is active.
-
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { TopBar } from "../../components/ui/TopBar";
 import { Badge } from "../../components/ui/Badge";
@@ -12,42 +8,26 @@ import { AnalyticsBar } from "../../components/poll/AnalyticsBar";
 import { Sparkline } from "../../components/poll/Sparkline";
 import { usePollSocket } from "#/hooks/usePollSocket";
 import { type AnalyticsPoll } from "#/lib/types";
+import { closePoll, getPoll, publishPoll } from "#/services/poll";
+import { authenticate } from "#/services/auth";
 
 export const Route = createFileRoute("/analytics/$pollId")({
-  // TODO: beforeLoad: () => requireAuth(),  // redirect to /login if no Iris session
+  beforeLoad: async () => {
+    const isAuthenticated = await authenticate();
+    if (!isAuthenticated) {
+      throw redirect({
+        to: "/login",
+        replace: true,
+        search: {},
+      });
+    }
+  },
+  loader: async ({ params }) => {
+    const data = await getPoll(params.pollId);
+    return data;
+  },
   component: AnalyticsPage,
 });
-
-// ── mock (replace with useQuery → GET /polls/:id/analytics) ──────────────────
-
-const MOCK: AnalyticsPoll = {
-  id: "p1",
-  title: "Which frontend framework should we adopt?",
-  status: "active",
-  isAnonymous: false,
-  showLiveResults: true,
-  requiresAuth: true,
-  options: [
-    { label: "React", count: 74 },
-    { label: "Vue", count: 43 },
-    { label: "Svelte", count: 26 },
-  ],
-  totalResponses: 143,
-  expiresAt: new Date(Date.now() + 1.8 * 3_600_000).toISOString(),
-  createdAt: new Date().toISOString(),
-  shareUrl: "pulse.app/p/abc123",
-  velocity: [
-    { label: "6h ago", count: 4 },
-    { label: "5h ago", count: 9 },
-    { label: "4h ago", count: 18 },
-    { label: "3h ago", count: 31 },
-    { label: "2h ago", count: 45 },
-    { label: "1h ago", count: 28 },
-    { label: "now", count: 8 },
-  ],
-};
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function calcPcts(counts: number[]): number[] {
   const total = counts.reduce((a, b) => a + b, 0);
@@ -72,25 +52,24 @@ function StatCard({ value, label }: { value: string; label: string }) {
   );
 }
 
-// ── page ──────────────────────────────────────────────────────────────────────
-
 function AnalyticsPage() {
   const { pollId } = Route.useParams();
-  // TODO: const { data } = useSuspenseQuery({ queryKey: ["analytics", pollId], queryFn: () => api.get(`/polls/${pollId}/analytics`) });
+  const initialData = Route.useLoaderData();
+  const shareUrl = `${window.location.origin}/poll/${initialData.id}`;
 
-  const [data, setData] = useState<AnalyticsPoll>(MOCK);
+  const [data, setData] = useState<AnalyticsPoll>(initialData);
   const [publishing, setPublishing] = useState(false);
   const [closing, setClosing] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const isActive = data.status === "active";
-  const isPublished = data.status === "published";
-  const isClosed = data.status === "closed";
+  const isActive = data.status === "LIVE";
+  const isPublished = data.status === "PUBLISHED";
+  const isClosed = data.status === "ENDED";
   const counts = data.options.map((o) => o.count);
   const pcts = calcPcts(counts);
   const leadingIdx = pcts.indexOf(Math.max(...pcts));
 
-  // ── Socket.IO ───────────────────────────────────────────────────────────────
+  // socket handlers
   usePollSocket({
     pollId,
     enabled: isActive,
@@ -102,17 +81,16 @@ function AnalyticsPage() {
       }));
     },
     onPollClosed: () => {
-      setData((prev) => ({ ...prev, status: "closed" }));
+      setData((prev) => ({ ...prev, status: "ENDED" }));
     },
   });
 
-  // ── actions ─────────────────────────────────────────────────────────────────
+  // actions
   async function handlePublish() {
     setPublishing(true);
     try {
-      // TODO: await api.post(`/polls/${pollId}/publish`);
-      await new Promise((r) => setTimeout(r, 500));
-      setData((d) => ({ ...d, status: "published" }));
+      await publishPoll(data.id);
+      setData((d) => ({ ...d, status: "PUBLISHED" }));
     } finally {
       setPublishing(false);
     }
@@ -121,21 +99,19 @@ function AnalyticsPage() {
   async function handleClose() {
     setClosing(true);
     try {
-      // TODO: await api.post(`/polls/${pollId}/close`);
-      await new Promise((r) => setTimeout(r, 400));
-      setData((d) => ({ ...d, status: "closed" }));
+      await closePoll(data.id);
+      setData((d) => ({ ...d, status: "ENDED" }));
     } finally {
       setClosing(false);
     }
   }
 
   function handleCopy() {
-    navigator.clipboard.writeText(data.shareUrl);
+    navigator.clipboard.writeText(shareUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  // ── render ───────────────────────────────────────────────────────────────────
   return (
     <>
       <TopBar
@@ -143,9 +119,9 @@ function AnalyticsPage() {
         title="Analytics"
         right={
           <div className="flex items-center gap-2">
-            {isActive && <Badge variant="active" />}
-            {isPublished && <Badge variant="published" />}
-            {isClosed && !isPublished && <Badge variant="closed" />}
+            {isActive && <Badge variant="LIVE" />}
+            {isPublished && <Badge variant="PUBLISHED" />}
+            {isClosed && !isPublished && <Badge variant="ENDED" />}
           </div>
         }
       />
@@ -157,7 +133,7 @@ function AnalyticsPage() {
             {data.title}
           </h1>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-ink-3">
-            <span>{data.shareUrl}</span>
+            <span>{shareUrl}</span>
             <button
               onClick={handleCopy}
               className="text-green-acc hover:text-green-bar transition-colors"
@@ -192,8 +168,8 @@ function AnalyticsPage() {
           </p>
           {data.options.map((opt, i) => (
             <AnalyticsBar
-              key={i}
-              label={opt.label}
+              key={opt.id}
+              label={opt.text}
               count={opt.count}
               pct={pcts[i]}
               isLeading={i === leadingIdx}

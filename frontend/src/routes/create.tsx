@@ -127,10 +127,7 @@ function CreatePoll() {
         status: asDraft ? "DRAFT" : "LIVE",
       };
 
-      console.log(payload);
-
       const pollData = await createPoll(payload);
-      console.log(pollData);
       navigate({
         to: "/analytics/$pollId",
         params: { pollId: pollData.id },
