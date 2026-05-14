@@ -8,6 +8,7 @@ import {
 import { ApiError, ApiResponse } from "../../common/utils";
 import { callback, refreshTokens, registerUser } from "./auth.services";
 import { verifyAccessToken } from "./utils/token";
+import type { AuthenticatedRequest } from "../../common/utils/interfaces";
 
 export class AuthController {
   static async handleMe(req: Request, res: Response) {
@@ -97,16 +98,9 @@ export class AuthController {
     }
   }
 
-  static async handleUserInfo(req: Request, res: Response) {
+  static async handleUserInfo(req: AuthenticatedRequest, res: Response) {
     try {
-      const response = await fetch(`${IRIS_AUTH_URL}/auth/userinfo`);
-
-      if (!response.ok) throw ApiError.unauthorized("Unauthorized");
-
-      if (response.ok) {
-        const data = await response.json();
-        ApiResponse.ok(res, "User info fetched successfully", { data });
-      }
+      ApiResponse.ok(res, "Userinfo through token", req.user!);
     } catch (error) {
       ApiResponse.error(res, error);
     }
