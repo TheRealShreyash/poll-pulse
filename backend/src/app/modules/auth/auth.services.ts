@@ -2,6 +2,7 @@ import { ApiError } from "../../common/utils";
 import { CLIENT_ID, CLIENT_SECRET, IRIS_AUTH_URL } from "../../../config";
 import { db } from "../../../db";
 import { usersTable } from "../../../db/schema";
+import { eq } from "drizzle-orm";
 
 export const callback = async (code: string) => {
   const response = await fetch(`${IRIS_AUTH_URL}/auth/token`, {
@@ -42,7 +43,15 @@ export const refreshTokens = async (refreshToken: string) => {
 export const registerUser = async (payload: any) => {
   const { sub, name, email } = payload;
 
-  console.log(payload)
+  const [userResult] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, sub))
+    .limit(1);
+
+  if (userResult) return;
+
+  console.log(payload);
 
   const [user] = await db
     .insert(usersTable)

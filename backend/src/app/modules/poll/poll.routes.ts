@@ -17,4 +17,11 @@ pollRouter.post(
   PollController.handleCreatePoll,
 );
 
+pollRouter.get(
+  "/poll",
+  authenticate(),
+  restrictToAuthenticatedUser(),
+  PollController.handleGetPoll,
+);
+
 export default pollRouter;
