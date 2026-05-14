@@ -29,4 +29,18 @@ export const authenticate = async () => {
   }
 };
 
-// export const getUserInfo
+export const getUserInfo = async () => {
+  const response = await fetch("/api/auth/userinfo", {
+    credentials: "include",
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message ?? "Failed to fetch user info");
+  }
+
+  const userData = await response.json();
+
+  return userData;
+};
