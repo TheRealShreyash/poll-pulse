@@ -17,6 +17,7 @@ export interface Poll {
   showLiveResults: boolean;
   expiresAt: string | null;
   createdAt: string;
+  totalResponses?: number;
 }
 
 export interface PollWithOptions extends Poll {
@@ -25,11 +26,10 @@ export interface PollWithOptions extends Poll {
 }
 
 export interface VelocityPoint {
-  label: string;
+  hour: string;
   count: number;
 }
 
 export interface AnalyticsPoll extends PollWithOptions {
-  shareUrl: string;
   velocity: VelocityPoint[];
 }
