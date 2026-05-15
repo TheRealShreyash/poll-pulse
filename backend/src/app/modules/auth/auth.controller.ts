@@ -50,13 +50,13 @@ export class AuthController {
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 1000,
       });
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 15 * 60 * 1000,
       });
 
@@ -82,13 +82,13 @@ export class AuthController {
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 24 * 60 * 60 * 1000,
       });
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: isProduction,
-        sameSite: "lax",
+        sameSite: "none",
         maxAge: 15 * 60 * 1000,
       });
 
