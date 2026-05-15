@@ -1,16 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { toPng } from "html-to-image";
 import { TopBar } from "#/components/ui/TopBar";
 import { Badge } from "#/components/ui/Badge";
 import { Button } from "#/components/ui/Button";
 import { OptionBar } from "#/components/poll/OptionBar";
 import { LiveDot } from "#/components/poll/LiveDot";
 import { AnalyticsBar } from "#/components/poll/AnalyticsBar";
+import { ShareCard } from "#/components/poll/ShareCard";
 import { usePollSocket } from "#/hooks/usePollSocket";
 import { useCountdown } from "#/hooks/useCountdown";
 import type { PollWithOptions } from "#/lib/types";
 import { getPoll, checkVote, respondToPoll } from "#/services/poll";
 import { authenticate, redirectToIrisLogin } from "#/services/auth";
+import { Share2 } from "lucide-react";
 
 export const Route = createFileRoute("/poll/$pollId")({
   loader: async ({ params }) => {
@@ -37,6 +40,9 @@ function PollPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     authenticate().then(setIsLoggedIn);
@@ -47,9 +53,7 @@ function PollPage() {
   const isClosed = poll.status === "ENDED";
 
   const showBars = hasVoted || isPublished || isClosed;
-
   const authBlocked = !poll.isAnonymous && isLoggedIn === false;
-
   const canVote = isActive && !hasVoted && !submitting && !authBlocked;
 
   const countdown = useCountdown(poll.expiresAt);
@@ -85,6 +89,28 @@ function PollPage() {
     }
   }
 
+  async function handleShareImage() {
+    if (!shareCardRef.current) return;
+    setIsGeneratingImage(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: "#0f0f12",
+      });
+      const link = document.createElement("a");
+      link.download = `pulse-poll-${poll.id}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate image", err);
+      setError("Could not generate image. Try again.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  }
+
+  // ─── PUBLISHED VIEW (final results) ─────────────────────────
   if (isPublished) {
     const leadingIdx = pcts.indexOf(Math.max(...pcts));
     return (
@@ -102,7 +128,6 @@ function PollPage() {
             {poll.isAnonymous ? "Anonymous" : "Authenticated"}
           </p>
 
-          {/* Winner callout — highlighted box for the leading option */}
           <div className="mb-6 px-4 py-3 rounded-lg bg-green-dim border border-green-bar/25">
             <p className="text-[11px] text-ink-3 mb-0.5">Most voted</p>
             <p className="text-[15px] font-medium text-green-acc">
@@ -113,7 +138,6 @@ function PollPage() {
             </p>
           </div>
 
-          {/* All options as read-only bars sorted by original display order */}
           <div className="space-y-3.5">
             {poll.options.map((opt, i) => (
               <AnalyticsBar
@@ -126,10 +150,32 @@ function PollPage() {
             ))}
           </div>
         </main>
+
+        <div className="fixed -left-2499.75 top-0">
+          <ShareCard ref={shareCardRef} poll={poll} />
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleShareImage}
+          disabled={isGeneratingImage}
+          className="fixed bottom-6 right-6 z-50 rounded-full shadow-lg bg-bg-2 border border-white/10 hover:bg-white/5"
+        >
+          {isGeneratingImage ? (
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              <Share2 className="w-4 h-4 mr-2" />
+              Share as Image
+            </>
+          )}
+        </Button>
       </>
     );
   }
 
+  // ─── ACTIVE / CLOSED VIEW (no share button) ─────────────────
   return (
     <>
       <TopBar liveCount={isActive ? poll.totalResponses : undefined} />

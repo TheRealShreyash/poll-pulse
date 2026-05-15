@@ -1,4 +1,3 @@
-// src/components/poll/AnalyticsBar.tsx
 interface AnalyticsBarProps {
   label: string;
   count: number;
@@ -22,7 +21,7 @@ export function AnalyticsBar({
           {count} · {pct}%
         </span>
       </div>
-      <div className="h-[5px] w-full rounded-full bg-bg-3 overflow-hidden">
+      <div className="h-1.25 w-full rounded-full bg-bg-3 overflow-hidden">
         <div
           className="h-full rounded-full bar-transition"
           style={{

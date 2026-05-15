@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as SignupRouteImport } from "./routes/signup"
 import { Route as LoginRouteImport } from "./routes/login"
+import { Route as LandingRouteImport } from "./routes/landing"
 import { Route as CreateRouteImport } from "./routes/create"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as PollPollIdRouteImport } from "./routes/poll/$pollId"
@@ -24,6 +25,11 @@ const SignupRoute = SignupRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: "/login",
   path: "/login",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: "/landing",
+  path: "/landing",
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -50,6 +56,7 @@ const AnalyticsPollIdRoute = AnalyticsPollIdRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
+  "/landing": typeof LandingRoute
   "/login": typeof LoginRoute
   "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
+  "/landing": typeof LandingRoute
   "/login": typeof LoginRoute
   "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/create": typeof CreateRoute
+  "/landing": typeof LandingRoute
   "/login": typeof LoginRoute
   "/signup": typeof SignupRoute
   "/analytics/$pollId": typeof AnalyticsPollIdRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/create"
+    | "/landing"
     | "/login"
     | "/signup"
     | "/analytics/$pollId"
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | "/"
     | "/create"
+    | "/landing"
     | "/login"
     | "/signup"
     | "/analytics/$pollId"
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/create"
+    | "/landing"
     | "/login"
     | "/signup"
     | "/analytics/$pollId"
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
+  LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   AnalyticsPollIdRoute: typeof AnalyticsPollIdRoute
@@ -122,6 +135,13 @@ declare module "@tanstack/react-router" {
       path: "/login"
       fullPath: "/login"
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/landing": {
+      id: "/landing"
+      path: "/landing"
+      fullPath: "/landing"
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/create": {
@@ -158,6 +178,7 @@ declare module "@tanstack/react-router" {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
+  LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   AnalyticsPollIdRoute: AnalyticsPollIdRoute,

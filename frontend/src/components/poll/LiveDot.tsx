@@ -1,9 +1,8 @@
-// src/components/poll/LiveDot.tsx
 export function LiveDot({ className = "" }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`inline-block w-[6px] h-[6px] rounded-full bg-green-bar animate-blink flex-shrink-0 ${className}`}
+      className={`inline-block w-1.5 h-1.5 rounded-full bg-green-bar animate-blink shrink-0 ${className}`}
     />
   );
 }
