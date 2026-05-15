@@ -1,12 +1,10 @@
+import { BACKEND_URL } from "#/config";
 import { io } from "socket.io-client";
 
-export const socket = io(
-  import.meta.env.VITE_API_URL ?? "http://localhost:3000",
-  {
-    autoConnect: false,
-    withCredentials: true, // sends the Iris session cookie
-  },
-);
+export const socket = io(BACKEND_URL ?? "http://localhost:8080", {
+  autoConnect: false,
+  withCredentials: true, // sends the Iris session cookie
+});
 
 export const EVENTS = {
   // client → server

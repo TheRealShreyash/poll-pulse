@@ -8,8 +8,15 @@ function formatHour(iso: string): string {
 }
 
 export function Sparkline({ data }: { data: VelocityPoint[] }) {
-  if (data.length < 2) return null;
-
+  if (data.length < 2) {
+    return (
+      <div className="flex items-center justify-center h-12">
+        <p className="text-[11px] text-ink-3">
+          {data.length === 0 ? "No responses yet" : "Not enough data yet"}
+        </p>
+      </div>
+    );
+  }
   const W = 300,
     H = 48,
     pad = 4;

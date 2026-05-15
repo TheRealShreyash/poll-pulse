@@ -119,3 +119,11 @@ export const respondToPoll = async (payload: ResponsePayload) => {
   const { data } = await response.json();
   return data;
 };
+
+export const checkVote = async (pollId: string): Promise<boolean> => {
+  const response = await fetch(`/api/poll/has-voted?id=${pollId}`, {
+    credentials: "include",
+  });
+  const { data } = await response.json();
+  return data.voted;
+};
