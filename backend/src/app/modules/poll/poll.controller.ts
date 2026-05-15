@@ -71,7 +71,7 @@ export default class PollController {
   static async handleRespond(req: AuthenticatedRequest, res: Response) {
     try {
       const payload = req.body;
-      const userId = req.user!.sub;
+      const userId = req.user?.sub ?? null;
       const responded = await respond(req, payload, userId);
 
       if (!responded) throw ApiError.internalError("Internal server error");

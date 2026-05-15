@@ -4,6 +4,7 @@ import { createPollPayloadModel, responsePayloadModel } from "./poll.models";
 import PollController from "./poll.controller";
 import {
   authenticate,
+  pollAuthenticate,
   restrictToAuthenticatedUser,
 } from "../../common/middlewares/authenticate.middleware";
 
@@ -19,8 +20,7 @@ pollRouter.post(
 
 pollRouter.get(
   "/poll",
-  authenticate(),
-  restrictToAuthenticatedUser(),
+  pollAuthenticate(),
   PollController.handleGetPoll,
 );
 
@@ -47,7 +47,7 @@ pollRouter.patch(
 
 pollRouter.post(
   "/respond",
-  authenticate(),
+  pollAuthenticate(),
   validate(responsePayloadModel),
   PollController.handleRespond,
 );

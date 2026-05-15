@@ -190,8 +190,8 @@ export const respond = async (
   await db.insert(votesTable).values({
     pollId: poll.id,
     optionId,
-    userId: userId || null, // Can be null for anonymous polls
-    fingerprint: fingerprint || null,
+    userId: userId || null,
+    fingerprint: userId ? null : fingerprint || null,
   });
   return true;
 };
