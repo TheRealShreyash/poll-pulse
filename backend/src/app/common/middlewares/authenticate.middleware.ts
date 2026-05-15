@@ -27,6 +27,28 @@ export const authenticate = () => {
   };
 };
 
+export const pollAuthenticate = () => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const token = req.cookies["accessToken"];
+
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    try {
+      req.user = verifyAccessToken(token);
+      next();
+    } catch {
+      return next(ApiError.unauthorized("Session expired or invalid token"));
+    }
+  };
+};
+
 export const restrictToAuthenticatedUser = () => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     // if (!req.user) throw ApiError.unauthorized("Authentication required");
