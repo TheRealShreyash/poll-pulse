@@ -6,7 +6,7 @@ export const Route = createFileRoute("/login")({
     const isAuthenticated = await authenticate();
     if (isAuthenticated) {
       throw redirect({
-        to: "/",
+        to: "/dashboard",
         replace: true,
         search: {},
       });

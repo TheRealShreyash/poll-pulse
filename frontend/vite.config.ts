@@ -20,7 +20,7 @@ export default defineConfig({
     allowedHosts: ['8fa9-2a09-bac5-3e09-11c3-00-1c5-126.ngrok-free.app'],
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "https://pulse-omega-lovat.vercel.app/",
         changeOrigin: true,
       },
     },
