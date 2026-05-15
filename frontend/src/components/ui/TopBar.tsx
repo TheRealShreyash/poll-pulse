@@ -69,7 +69,7 @@ export function TopBar({
         )}
         {right}
         {showAvatar && (
-          <div className="w-[26px] h-6.5 rounded-full bg-green-dim border border-green-bar/30 flex items-center justify-center text-[11px] font-medium text-green-acc select-none">
+          <div className="w-6.5 h-6.5 rounded-full bg-green-dim border border-green-bar/30 flex items-center justify-center text-[11px] font-medium text-green-acc select-none">
             {initials}
           </div>
         )}
