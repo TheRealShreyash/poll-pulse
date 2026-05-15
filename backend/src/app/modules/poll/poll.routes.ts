@@ -52,4 +52,6 @@ pollRouter.post(
   PollController.handleRespond,
 );
 
+pollRouter.get('/has-voted', pollAuthenticate(), PollController.handleHasVoted)
+
 export default pollRouter;

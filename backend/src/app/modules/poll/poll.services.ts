@@ -10,6 +10,7 @@ import type { Request } from "express";
 import { ApiError } from "../../common/utils";
 import type { CreatePollPayload, ResponsePayload } from "./poll.models";
 import { getRequestFingerprint } from "./utils/fingerprint";
+import { pollEmitter } from "../../../socket/emitter";
 
 export const createPoll = async (
   payload: CreatePollPayload,
@@ -75,9 +76,16 @@ export const getPoll = async (pollId: string, userId?: string) => {
   }
 
   const options = await db
-    .select()
+    .select({
+      id: optionsTable.id,
+      text: optionsTable.text,
+      displayOrder: optionsTable.displayOrder,
+      count: sql<number>`cast(count(${votesTable.id}) as int)`,
+    })
     .from(optionsTable)
+    .leftJoin(votesTable, eq(votesTable.optionId, optionsTable.id))
     .where(eq(optionsTable.pollId, poll.id))
+    .groupBy(optionsTable.id)
     .orderBy(asc(optionsTable.displayOrder));
 
   const voteResult = await db
@@ -145,6 +153,8 @@ export const closePoll = async (pollId: string, creatorId: string) => {
 
   if (!poll) throw ApiError.notFound("No poll found with that id");
 
+  pollEmitter.pollClosed(pollId);
+
   return poll;
 };
 
@@ -193,5 +203,44 @@ export const respond = async (
     userId: userId || null,
     fingerprint: userId ? null : fingerprint || null,
   });
+
+  const updatedOptions = await db
+    .select({
+      count: sql<number>`cast(count(${votesTable.id}) as int)`,
+    })
+    .from(optionsTable)
+    .leftJoin(votesTable, eq(votesTable.optionId, optionsTable.id))
+    .where(eq(optionsTable.pollId, poll.id))
+    .groupBy(optionsTable.id)
+    .orderBy(asc(optionsTable.displayOrder));
+
+  const counts = updatedOptions.map((o) => o.count);
+  const total = counts.reduce((a, b) => a + b, 0);
+
+  pollEmitter.voteUpdate(poll.id, counts, total);
+
   return true;
+};
+
+export const hasVoted = async (
+  req: Request,
+  pollId: string,
+  userId: string | null,
+) => {
+  const fingerprint = getRequestFingerprint(req);
+
+  const [vote] = await db
+    .select()
+    .from(votesTable)
+    .where(
+      and(
+        eq(votesTable.pollId, pollId),
+        userId
+          ? eq(votesTable.userId, userId)
+          : eq(votesTable.fingerprint, fingerprint ?? ""),
+      ),
+    )
+    .limit(1);
+
+  return !!vote;
 };

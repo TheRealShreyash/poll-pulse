@@ -41,7 +41,7 @@ export const pollAuthenticate = () => {
     }
 
     try {
-      req.user = verifyAccessToken(token);
+      req.user = await verifyAccessToken(token);
       next();
     } catch {
       return next(ApiError.unauthorized("Session expired or invalid token"));

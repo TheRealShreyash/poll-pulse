@@ -1,8 +1,13 @@
 import { Server } from "socket.io";
-import type { Express } from "express";
+import { FRONTEND_URL } from "../config";
 
 export function setupSocketServer(server: any) {
-  const io = new Server(server);
+  const io = new Server(server, {
+    cors: {
+      origin: FRONTEND_URL,
+      credentials: true,
+    },
+  });
 
   io.on("connection", (socket) => {
     console.log(`[Socket] connected: ${socket.id}`);

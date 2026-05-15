@@ -5,6 +5,7 @@ import {
   createPoll,
   getPoll,
   getUserPolls,
+  hasVoted,
   respond,
   updatePoll,
 } from "./poll.services";
@@ -77,6 +78,17 @@ export default class PollController {
       if (!responded) throw ApiError.internalError("Internal server error");
 
       ApiResponse.ok(res, "Response recorded");
+    } catch (error) {
+      ApiResponse.error(res, error);
+    }
+  }
+
+  static async handleHasVoted(req: AuthenticatedRequest, res: Response) {
+    try {
+      const pollId = req.query.id as string;
+      const userId = req.user?.sub ?? null;
+      const voted = await hasVoted(req, pollId, userId);
+      ApiResponse.ok(res, "Vote status", { voted });
     } catch (error) {
       ApiResponse.error(res, error);
     }
