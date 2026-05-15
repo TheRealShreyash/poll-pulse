@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TopBar } from "#/components/ui/TopBar";
 import { Badge } from "#/components/ui/Badge";
 import { Button } from "#/components/ui/Button";
@@ -9,17 +9,17 @@ import { AnalyticsBar } from "#/components/poll/AnalyticsBar";
 import { usePollSocket } from "#/hooks/usePollSocket";
 import { useCountdown } from "#/hooks/useCountdown";
 import type { PollWithOptions } from "#/lib/types";
-import { getPoll, respondToPoll } from "#/services/poll";
+import { getPoll, checkVote, respondToPoll } from "#/services/poll";
+import { authenticate, redirectToIrisLogin } from "#/services/auth";
 
 export const Route = createFileRoute("/poll/$pollId")({
   loader: async ({ params }) => {
     const data = await getPoll(params.pollId);
-    return data;
+    const voted = await checkVote(params.pollId);
+    return { data, voted };
   },
   component: PollPage,
 });
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function calcPcts(counts: number[]): number[] {
   const total = counts.reduce((a, b) => a + b, 0);
@@ -27,30 +27,37 @@ function calcPcts(counts: number[]): number[] {
   return counts.map((c) => Math.round((c / total) * 100));
 }
 
-// ── page ──────────────────────────────────────────────────────────────────────
-
 function PollPage() {
   const { pollId } = Route.useParams();
-  const pollData = Route.useLoaderData();
+  const { data, voted } = Route.useLoaderData();
 
-  const [poll, setPoll] = useState<PollWithOptions>(pollData);
+  const [poll, setPoll] = useState<PollWithOptions>(data);
   const [selected, setSelected] = useState<number | null>(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasVoted, setHasVoted] = useState(voted);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    authenticate().then(setIsLoggedIn);
+  }, []);
 
   const isActive = poll.status === "LIVE";
   const isPublished = poll.status === "PUBLISHED";
   const isClosed = poll.status === "ENDED";
+
   const showBars = hasVoted || isPublished || isClosed;
-  const canVote = isActive && !hasVoted && !submitting;
+
+  const authBlocked = !poll.isAnonymous && isLoggedIn === false;
+
+  const canVote = isActive && !hasVoted && !submitting && !authBlocked;
+
   const countdown = useCountdown(poll.expiresAt);
   const pcts = calcPcts(poll.options.map((o) => o.count));
 
-  // ── Socket.IO ───────────────────────────────────────────────────────────────
   usePollSocket({
     pollId,
-    enabled: isActive && poll.showLiveResults,
+    enabled: (isActive && poll.showLiveResults) || voted,
     onVoteUpdate: ({ counts, total }) => {
       setPoll((prev) => ({
         ...prev,
@@ -61,26 +68,23 @@ function PollPage() {
     onPollClosed: () => setPoll((prev) => ({ ...prev, status: "ENDED" })),
   });
 
-  // ── vote ──────────────────────────────────────────────────────────────────
   async function handleVote() {
     if (selected === null || !canVote) return;
     setSubmitting(true);
     setError(null);
     try {
       const optionId = poll.options[selected].id;
-      await respondToPoll({
-        pollId,
-        optionId,
-      });
+      await respondToPoll({ pollId, optionId });
       setHasVoted(true);
-    } catch {
-      setError("Failed to submit. Please try again.");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Failed to submit. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
-  // ── published read-only view ──────────────────────────────────────────────
   if (isPublished) {
     const leadingIdx = pcts.indexOf(Math.max(...pcts));
     return (
@@ -98,7 +102,7 @@ function PollPage() {
             {poll.isAnonymous ? "Anonymous" : "Authenticated"}
           </p>
 
-          {/* Winner callout */}
+          {/* Winner callout — highlighted box for the leading option */}
           <div className="mb-6 px-4 py-3 rounded-lg bg-green-dim border border-green-bar/25">
             <p className="text-[11px] text-ink-3 mb-0.5">Most voted</p>
             <p className="text-[15px] font-medium text-green-acc">
@@ -109,10 +113,11 @@ function PollPage() {
             </p>
           </div>
 
+          {/* All options as read-only bars sorted by original display order */}
           <div className="space-y-3.5">
             {poll.options.map((opt, i) => (
               <AnalyticsBar
-                key={i}
+                key={opt.id}
                 label={opt.text}
                 count={opt.count}
                 pct={pcts[i]}
@@ -125,7 +130,6 @@ function PollPage() {
     );
   }
 
-  // ── active / closed view ──────────────────────────────────────────────────
   return (
     <>
       <TopBar liveCount={isActive ? poll.totalResponses : undefined} />
@@ -147,16 +151,30 @@ function PollPage() {
             </>
           )}
           {isClosed && <span>Poll ended</span>}
-          <span>{poll.isAnonymous ? "Anonymous" : "Authenticated"}</span>
+          <span>{poll.isAnonymous ? "Anonymous" : "Sign-in required"}</span>
           <span>·</span>
           <span>Single choice</span>
         </div>
 
-        {/* Options */}
+        {authBlocked && (
+          <div className="mb-6 px-4 py-4 rounded-lg border border-white/8 bg-bg-2 text-center">
+            <p className="text-[13px] text-ink-2 mb-3">
+              This poll requires you to sign in to vote.
+            </p>
+            <Button
+              variant="accent"
+              size="sm"
+              onClick={() => redirectToIrisLogin()}
+            >
+              Sign in to vote
+            </Button>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2.5 mb-5">
           {poll.options.map((opt, i) => (
             <OptionBar
-              key={i}
+              key={opt.id}
               label={opt.text}
               pct={pcts[i]}
               hasVoted={showBars}
@@ -169,8 +187,7 @@ function PollPage() {
           ))}
         </div>
 
-        {/* Submit */}
-        {isActive && !hasVoted && (
+        {isActive && !hasVoted && !authBlocked && (
           <div className="flex flex-col gap-2">
             <Button
               variant="accent"
@@ -183,20 +200,12 @@ function PollPage() {
             {error && (
               <p className="text-[12px] text-red-400 text-center">{error}</p>
             )}
-            {poll.isAnonymous && !poll.isAnonymous && (
-              <p className="text-[11px] text-ink-3 text-center mt-1">
-                Sign-in required to vote
-              </p>
-            )}
           </div>
         )}
 
-        {/* Post-vote */}
-        {(hasVoted || isClosed) && (
+        {hasVoted && (
           <div className="mt-4 space-y-1 text-center">
-            {hasVoted && (
-              <p className="text-[12px] text-ink-3">Your vote is recorded</p>
-            )}
+            <p className="text-[12px] text-ink-3">Your vote is recorded</p>
             {isActive && poll.showLiveResults && (
               <p className="text-[11px] text-ink-3 flex items-center justify-center gap-1.5">
                 <LiveDot />
@@ -210,7 +219,6 @@ function PollPage() {
           </div>
         )}
 
-        {/* Closed, not yet published */}
         {isClosed && !hasVoted && (
           <div className="mt-8 text-center">
             <p className="text-[14px] text-ink-2">This poll has ended</p>
