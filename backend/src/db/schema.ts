@@ -16,7 +16,7 @@ export const pollStatusEnum = pgEnum("poll_status", [
   "PUBLISHED",
 ]);
 
-export const usersTable = pgTable("users", {
+export const usersTable = pgTable("users_pulse", {
   id: varchar("id").primaryKey(),
   username: varchar("username", { length: 45 }).notNull(),
   email: varchar("email", { length: 322 }).notNull().unique(),
