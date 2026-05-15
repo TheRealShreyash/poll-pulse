@@ -3,12 +3,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/src/server.ts"
+      "destination": "/api/server.ts"
     }
-  ],
-  "functions": {
-    "src/server.ts": {
-      "runtime": "vercel-bun@latest"
-    }
-  }
+  ]
 }
